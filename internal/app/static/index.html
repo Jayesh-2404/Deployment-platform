@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Deploy Platform</title>
+    <link rel="stylesheet" href="/static/styles.css" />
+  </head>
+  <body>
+    <main class="shell">
+      <header class="topbar">
+        <div>
+          <p class="eyebrow">Self-hosted deployment control plane</p>
+          <h1>Deploy Platform</h1>
+        </div>
+        <button id="refreshButton" type="button">Refresh</button>
+      </header>
+
+      <section class="grid">
+        <form id="projectForm" class="panel">
+          <h2>Add Project</h2>
+          <label>
+            Name
+            <input id="name" name="name" placeholder="PayApp" required />
+          </label>
+          <label>
+            GitHub Repo URL
+            <input id="repoUrl" name="repoUrl" placeholder="https://github.com/Jayesh-2404/PayApp" required />
+          </label>
+          <label>
+            Branch
+            <input id="branch" name="branch" placeholder="main" />
+          </label>
+          <label>
+            Health Check Path
+            <input id="healthCheckPath" name="healthCheckPath" placeholder="/" />
+          </label>
+          <button type="submit">Create Project</button>
+        </form>
+
+        <section class="panel">
+          <div class="section-title">
+            <h2>Projects</h2>
+            <span id="projectCount">0</span>
+          </div>
+          <div id="projects" class="list"></div>
+        </section>
+      </section>
+
+      <section class="grid detail-grid">
+        <section class="panel">
+          <div class="section-title">
+            <h2>Deployments</h2>
+            <span id="selectedProjectName">No project selected</span>
+          </div>
+          <div id="deployments" class="list"></div>
+        </section>
+
+        <section class="panel logs-panel">
+          <div class="section-title">
+            <h2>Live Logs</h2>
+            <span id="selectedDeploymentName">No deployment selected</span>
+          </div>
+          <pre id="logs">Select a deployment to stream logs.</pre>
+        </section>
+      </section>
+    </main>
+
+    <script src="/static/app.js"></script>
+  </body>
+</html>
