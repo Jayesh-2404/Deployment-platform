@@ -1,0 +1,38 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="820" height="380" viewBox="0 0 820 380" font-family="Segoe UI, Arial, sans-serif">
+  <defs>
+    <marker id="arr2" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M 0 1 L 9 5 L 0 9" fill="none" stroke="#1e1e1e" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+    </marker>
+  </defs>
+  <rect x="0" y="0" width="820" height="380" fill="#ffffff"/>
+  <!-- Store top -->
+  <rect x="240" y="18" width="200" height="72" rx="8" fill="#fff" stroke="#1e1e1e" stroke-width="2"/>
+  <text x="340" y="43" text-anchor="middle" font-size="14" font-weight="700" fill="#1e1e1e">store.Store</text>
+  <text x="340" y="61" text-anchor="middle" font-size="12" fill="#555">V1: JSON (.data/state.json)</text>
+  <text x="340" y="77" text-anchor="middle" font-size="12" fill="#555">+ in-memory SSE pub/sub</text>
+  <line x1="340" y1="90" x2="340" y2="150" stroke="#1e1e1e" stroke-width="2" marker-end="url(#arr2)"/>
+  <text x="352" y="126" font-size="11" fill="#555">reads/writes</text>
+  <!-- Row -->
+  <rect x="20" y="152" width="180" height="62" rx="8" fill="#fff" stroke="#1e1e1e" stroke-width="2"/>
+  <text x="110" y="176" text-anchor="middle" font-size="14" font-weight="600" fill="#1e1e1e">Dashboard</text>
+  <text x="110" y="194" text-anchor="middle" font-size="12" fill="#555">embedded static</text>
+  <line x1="200" y1="183" x2="228" y2="183" stroke="#1e1e1e" stroke-width="2" marker-end="url(#arr2)"/>
+  <rect x="230" y="152" width="200" height="62" rx="8" fill="#fff" stroke="#1e1e1e" stroke-width="2.5"/>
+  <text x="330" y="176" text-anchor="middle" font-size="14" font-weight="700" fill="#1e1e1e">app.Server</text>
+  <text x="330" y="194" text-anchor="middle" font-size="12" fill="#555">net/http, no framework</text>
+  <line x1="430" y1="183" x2="458" y2="183" stroke="#1e1e1e" stroke-width="2" marker-end="url(#arr2)"/>
+  <text x="444" y="172" font-size="11" fill="#555">queued</text>
+  <rect x="460" y="152" width="170" height="62" rx="8" fill="#fff" stroke="#1e1e1e" stroke-width="2"/>
+  <text x="545" y="176" text-anchor="middle" font-size="14" font-weight="600" fill="#1e1e1e">worker.Worker</text>
+  <text x="545" y="194" text-anchor="middle" font-size="12" fill="#555">1s ticker, one job</text>
+  <line x1="630" y1="183" x2="658" y2="183" stroke="#1e1e1e" stroke-width="2" marker-end="url(#arr2)"/>
+  <rect x="660" y="152" width="140" height="62" rx="8" fill="#fafafa" stroke="#1e1e1e" stroke-width="2" stroke-dasharray="8 5"/>
+  <text x="730" y="176" text-anchor="middle" font-size="14" font-weight="600" fill="#1e1e1e">Executor</text>
+  <text x="730" y="194" text-anchor="middle" font-size="12" fill="#555">simulation</text>
+  <!-- Bottom note -->
+  <rect x="20" y="250" width="780" height="110" rx="8" fill="#fafafa" stroke="#1e1e1e" stroke-width="1.5"/>
+  <text x="40" y="276" font-size="13" font-weight="700" fill="#1e1e1e">Rule: API decides, worker performs, store records.</text>
+  <text x="40" y="298" font-size="13" fill="#333">API validates input and creates queued rows, returns immediately. Worker owns</text>
+  <text x="40" y="318" font-size="13" fill="#333">cloning -&gt; building -&gt; deploying -&gt; running_health_check -&gt; success | failed.</text>
+  <text x="40" y="338" font-size="13" fill="#333">Same shape survives JSON -&gt; Postgres and simulation -&gt; Docker.</text>
+</svg>

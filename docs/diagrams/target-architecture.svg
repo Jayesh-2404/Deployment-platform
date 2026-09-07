@@ -1,0 +1,59 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="820" height="760" viewBox="0 0 820 760" font-family="Segoe UI, Arial, sans-serif">
+  <defs>
+    <marker id="arr" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M 0 1 L 9 5 L 0 9" fill="none" stroke="#1e1e1e" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+    </marker>
+  </defs>
+  <rect x="0" y="0" width="820" height="760" fill="#ffffff"/>
+  <!-- User -->
+  <rect x="310" y="12" width="200" height="44" rx="8" fill="#fff" stroke="#1e1e1e" stroke-width="2"/>
+  <text x="410" y="40" text-anchor="middle" font-size="16" font-weight="600" fill="#1e1e1e">User</text>
+  <line x1="410" y1="56" x2="410" y2="78" stroke="#1e1e1e" stroke-width="2" marker-end="url(#arr)"/>
+  <!-- Dashboard -->
+  <rect x="270" y="80" width="280" height="50" rx="8" fill="#fff" stroke="#1e1e1e" stroke-width="2"/>
+  <text x="410" y="101" text-anchor="middle" font-size="15" font-weight="600" fill="#1e1e1e">Next.js Dashboard</text>
+  <text x="410" y="119" text-anchor="middle" font-size="12" fill="#555">projects / logs / rollback</text>
+  <line x1="410" y1="130" x2="410" y2="152" stroke="#1e1e1e" stroke-width="2" marker-end="url(#arr)"/>
+  <!-- API -->
+  <rect x="270" y="154" width="280" height="50" rx="8" fill="#fff" stroke="#1e1e1e" stroke-width="2.5"/>
+  <text x="410" y="175" text-anchor="middle" font-size="15" font-weight="700" fill="#1e1e1e">Go API (net/http)</text>
+  <text x="410" y="193" text-anchor="middle" font-size="12" fill="#555">validates, creates queued rows</text>
+  <!-- split -->
+  <line x1="340" y1="204" x2="210" y2="230" stroke="#1e1e1e" stroke-width="2" marker-end="url(#arr)"/>
+  <line x1="480" y1="204" x2="610" y2="230" stroke="#1e1e1e" stroke-width="2" marker-end="url(#arr)"/>
+  <!-- Postgres -->
+  <rect x="80" y="232" width="260" height="66" rx="8" fill="#fff" stroke="#1e1e1e" stroke-width="2"/>
+  <text x="210" y="255" text-anchor="middle" font-size="15" font-weight="600" fill="#1e1e1e">PostgreSQL</text>
+  <text x="210" y="273" text-anchor="middle" font-size="12" fill="#555">projects / deployments /</text>
+  <text x="210" y="288" text-anchor="middle" font-size="12" fill="#555">logs / env vars</text>
+  <!-- Worker -->
+  <rect x="480" y="232" width="260" height="66" rx="8" fill="#fff" stroke="#1e1e1e" stroke-width="2"/>
+  <text x="610" y="255" text-anchor="middle" font-size="15" font-weight="600" fill="#1e1e1e">Go Worker</text>
+  <text x="610" y="273" text-anchor="middle" font-size="12" fill="#555">1s poll, owns transitions</text>
+  <text x="610" y="288" text-anchor="middle" font-size="12" fill="#555">one job at a time</text>
+  <line x1="610" y1="298" x2="610" y2="322" stroke="#1e1e1e" stroke-width="2" marker-end="url(#arr)"/>
+  <!-- Executor chain -->
+  <rect x="180" y="324" width="460" height="186" rx="8" fill="#fafafa" stroke="#1e1e1e" stroke-width="2" stroke-dasharray="8 5"/>
+  <text x="410" y="346" text-anchor="middle" font-size="14" font-weight="700" fill="#1e1e1e">Executor (Docker)</text>
+  <text x="410" y="368" text-anchor="middle" font-size="13" fill="#1e1e1e">git clone @ branch + commit SHA</text>
+  <text x="410" y="389" text-anchor="middle" font-size="13" fill="#1e1e1e">docker build -t project:sha</text>
+  <text x="410" y="410" text-anchor="middle" font-size="13" fill="#1e1e1e">docker run --network deploy-platform</text>
+  <text x="410" y="431" text-anchor="middle" font-size="13" fill="#1e1e1e">health check GET /health</text>
+  <text x="410" y="452" text-anchor="middle" font-size="13" fill="#1e1e1e">pass: Caddy -&gt; new / fail: keep old</text>
+  <text x="410" y="473" text-anchor="middle" font-size="13" fill="#1e1e1e">log append + status transition</text>
+  <text x="410" y="494" text-anchor="middle" font-size="13" fill="#1e1e1e">rollback to previous image</text>
+  <line x1="410" y1="510" x2="410" y2="534" stroke="#1e1e1e" stroke-width="2" marker-end="url(#arr)"/>
+  <!-- Internet -->
+  <rect x="310" y="536" width="200" height="40" rx="8" fill="#fff" stroke="#1e1e1e" stroke-width="2"/>
+  <text x="410" y="561" text-anchor="middle" font-size="15" font-weight="600" fill="#1e1e1e">Internet</text>
+  <line x1="410" y1="576" x2="410" y2="598" stroke="#1e1e1e" stroke-width="2" marker-end="url(#arr)"/>
+  <!-- Caddy -->
+  <rect x="260" y="600" width="300" height="50" rx="8" fill="#fff" stroke="#1e1e1e" stroke-width="2"/>
+  <text x="410" y="621" text-anchor="middle" font-size="15" font-weight="600" fill="#1e1e1e">Caddy Reverse Proxy</text>
+  <text x="410" y="639" text-anchor="middle" font-size="12" fill="#555">project.example.com + HTTPS</text>
+  <line x1="410" y1="650" x2="410" y2="672" stroke="#1e1e1e" stroke-width="2" marker-end="url(#arr)"/>
+  <!-- Containers -->
+  <rect x="230" y="674" width="360" height="50" rx="8" fill="#fff" stroke="#1e1e1e" stroke-width="2"/>
+  <text x="410" y="695" text-anchor="middle" font-size="15" font-weight="600" fill="#1e1e1e">Project Containers</text>
+  <text x="410" y="713" text-anchor="middle" font-size="12" fill="#555">internal ports only</text>
+</svg>

@@ -29,6 +29,10 @@ No framework on the backend. No ORM in V1. No Redis unless the poll-based worker
 
 Target shape:
 
+![Target architecture](docs/diagrams/target-architecture.svg)
+
+*Editable source: [`docs/diagrams/target-architecture.excalidraw`](docs/diagrams/target-architecture.excalidraw) — open in excalidraw.com.*
+
 ```txt
 User
   |
@@ -61,6 +65,10 @@ Project Containers (internal ports only)
 
 V1 implementation in this repo (`cmd/server/main.go`):
 
+![V1 implementation](docs/diagrams/v1-implementation.svg)
+
+*Editable source: [`docs/diagrams/v1-implementation.excalidraw`](docs/diagrams/v1-implementation.excalidraw).*
+
 ```txt
 Embedded Dashboard
   |
@@ -87,6 +95,10 @@ Domain model (`internal/domain/domain.go`):
 - Statuses: `queued -> cloning -> building -> deploying -> running_health_check -> success | failed`, plus `rollback -> success` and `rolled_back` for the replaced deployment
 
 Deploy flow:
+
+![Deploy flow](docs/diagrams/deploy-flow.svg)
+
+*Editable source: [`docs/diagrams/deploy-flow.excalidraw`](docs/diagrams/deploy-flow.excalidraw).*
 
 ```txt
 1. POST /api/projects/{id}/deployments -> row with status=queued
