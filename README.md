@@ -33,57 +33,11 @@ Target shape:
 
 *Editable source: [`docs/diagrams/target-architecture.excalidraw`](docs/diagrams/target-architecture.excalidraw) — open in excalidraw.com.*
 
-```txt
-User
-  |
-  v
-Next.js Dashboard
-  |
-  v
-Go API (net/http)
-  |
-  +--> PostgreSQL (projects, deployments, logs, env vars)
-  |
-  +--> Go Worker (polls queued jobs)
-         |
-         +--> git clone <repo> @ <branch>
-         +--> docker build -t <project-id>:<commit-sha> .
-         +--> docker run --network deploy-platform <image>
-         +--> health check GET <healthCheckPath>
-         +--> Caddy route update (pass: point traffic at new container / fail: keep old container)
-         +--> log append + status transition
-         +--> rollback to previous image on request
-
-Internet
-  |
-  v
-Caddy Reverse Proxy
-  |
-  v
-Project Containers (internal ports only)
-```
-
 V1 implementation in this repo (`cmd/server/main.go`):
 
 ![V1 implementation](docs/diagrams/v1-implementation.svg)
 
 *Editable source: [`docs/diagrams/v1-implementation.excalidraw`](docs/diagrams/v1-implementation.excalidraw).*
-
-```txt
-Embedded Dashboard
-  |
-  v
-app.Server (internal/app/server.go)
-  |
-  +--> store.Store (internal/store/store.go)
-  |      V1: JSONStore (.data/state.json) with in-memory pub/sub for logs
-  |
-  +--> worker.Worker (internal/worker/worker.go, 1s ticker, processOnce)
-         |
-         +--> executor.Executor (internal/executor/executor.go)
-                V1: SimulationExecutor (emits clone/build/run/health-check steps)
-                V2: Docker executor behind the same interface
-```
 
 The core rule: the API never runs infrastructure work. It validates input, creates a `queued` deployment row, and returns. The worker owns all state transitions. The store records every transition. This stays unchanged when JSON becomes Postgres and simulation becomes Docker.
 
@@ -100,37 +54,6 @@ Deploy flow:
 
 *Editable source: [`docs/diagrams/deploy-flow.excalidraw`](docs/diagrams/deploy-flow.excalidraw).*
 
-```txt
-1. POST /api/projects/{id}/deployments -> row with status=queued
-2. Worker ticker finds oldest queued/rollback job, one at a time
-3. status=cloning, log "worker picked up job"
-4. Executor.Deploy runs: clone, metadata check, Dockerfile strategy, build, network route, start candidate, health check
-5. Each executor step calls logFunc -> Store.AddLog -> broadcast to SSE subscribers
-6. On executor error: status=failed, error set, finishedAt set, old container untouched
-7. On success: status=deploying -> running_health_check -> success, imageTag saved
-8. Project.activeDeploymentId set to new deployment, finishedAt set
-```
-
-Rollback flow (`POST /api/deployments/{id}/rollback`):
-
-```txt
-1. API loads deployment, finds previous success via FindPreviousSuccessfulDeployment
-2. Creates new row with status=rollback, rollbackTo=<target-id>
-3. Worker picks it up, loads target imageTag/commitSha
-4. Executor.Rollback runs: start previous image, health check, point route back
-5. New row marked success (carries target imageTag/commitSha)
-6. Previously active deployment marked rolled_back, Project.activeDeploymentId reset to target
-7. Old working image is never deleted until the replacement passes its health check
-```
-
-Log streaming (`internal/app/server.go:streamLogs`, `internal/store/json_store.go`):
-
-```txt
-GET /api/deployments/{id}/logs/stream (text/event-stream)
-1. Server replays existing ListLogs as SSE events
-2. Server calls SubscribeLogs(id) -> per-deployment channel + unsubscribe func
-3. Worker AddLog writes to store and non-blocking broadcast to that channel
-4. Handler forwards channel messages as `event: log` until client disconnect
-```
+Deploy, rollback, and log streaming are covered by the diagram above. The API creates `queued` rows and returns. The worker moves each job through `cloning -> building -> deploying -> running_health_check -> success | failed`, appending a log on every step that is broadcast to SSE subscribers. Rollback creates a new row pointing at the previous success, restarts that image, and points the route back. A failed candidate never replaces the running container.
 
 Failure handling: health check failure leaves the previous container serving traffic and marks only the candidate as failed. Rollback requires a prior success or the API returns 400. Worker failures are logged to the deployment log, not just stdout, so they are visible in the dashboard.
