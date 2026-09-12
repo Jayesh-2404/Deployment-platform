@@ -20,10 +20,23 @@ import (
 func main() {
 	dataPath := env("DEPLOY_PLATFORM_DATA", filepath.Join(".data", "state.json"))
 	addr := env("DEPLOY_PLATFORM_ADDR", ":8080")
+	databaseURL := env("DEPLOY_PLATFORM_DATABASE_URL", "")
 
-	repository, err := store.NewJSONStore(dataPath)
-	if err != nil {
-		log.Fatalf("create store: %v", err)
+	var repository store.Store
+	if databaseURL != "" {
+		postgresStore, err := store.NewPostgresStore(context.Background(), databaseURL)
+		if err != nil {
+			log.Fatalf("create postgres store: %v", err)
+		}
+		defer postgresStore.Close()
+		log.Println("using postgres store (V2)")
+		repository = postgresStore
+	} else {
+		jsonStore, err := store.NewJSONStore(dataPath)
+		if err != nil {
+			log.Fatalf("create store: %v", err)
+		}
+		repository = jsonStore
 	}
 
 	exec := executor.NewSimulationExecutor()
