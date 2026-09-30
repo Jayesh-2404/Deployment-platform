@@ -57,3 +57,9 @@ Deploy flow:
 Deploy, rollback, and log streaming are covered by the diagram above. The API creates `queued` rows and returns. The worker moves each job through `cloning -> building -> deploying -> running_health_check -> success | failed`, appending a log on every step that is broadcast to SSE subscribers. Rollback creates a new row pointing at the previous success, restarts that image, and points the route back. A failed candidate never replaces the running container.
 
 Failure handling: health check failure leaves the previous container serving traffic and marks only the candidate as failed. Rollback requires a prior success or the API returns 400. Worker failures are logged to the deployment log, not just stdout, so they are visible in the dashboard.
+
+## Docs
+
+- [`docs/go-primer.md`](docs/go-primer.md) — Go from first principles, explained using this codebase as the worked example
+- [`docs/architecture.md`](docs/architecture.md) — component breakdown and the API/worker/store rule
+- [`docs/next-steps.md`](docs/next-steps.md) — V2 through V6 roadmap
