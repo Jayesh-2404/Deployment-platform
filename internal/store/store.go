@@ -17,4 +17,8 @@ type Store interface {
 	AddLog(deploymentID string, stream string, message string) (domain.DeploymentLog, error)
 	ListLogs(deploymentID string) ([]domain.DeploymentLog, error)
 	SubscribeLogs(deploymentID string) (<-chan domain.DeploymentLog, func())
+
+	ListEnvVars(projectID string) ([]domain.EnvVar, error)
+	UpsertEnvVar(projectID string, key string, value string) (domain.EnvVar, error)
+	DeleteEnvVar(projectID string, key string) error
 }

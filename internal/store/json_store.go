@@ -1,8 +1,6 @@
 package store
 
 import (
-	"crypto/rand"
-	"encoding/hex"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -19,22 +17,24 @@ import (
 var ErrNotFound = errors.New("not found")
 
 type JSONStore struct {
-	mu          sync.RWMutex
-	path        string
-	state       state
-	subscribers map[string]map[chan domain.DeploymentLog]struct{}
+	mu    sync.RWMutex
+	path  string
+	state state
+	logs  *logBroker
 }
 
 type state struct {
 	Projects    []domain.Project       `json:"projects"`
 	Deployments []domain.Deployment    `json:"deployments"`
 	Logs        []domain.DeploymentLog `json:"logs"`
+	EnvVars     []domain.EnvVar        `json:"envVars"`
 }
 
 func NewJSONStore(path string) (*JSONStore, error) {
 	store := &JSONStore{
-		path:        path,
-		subscribers: make(map[string]map[chan domain.DeploymentLog]struct{}),
+		path:  path,
+		logs:  newLogBroker(),
+		state: state{},
 	}
 	if err := store.load(); err != nil {
 		return nil, err
@@ -43,27 +43,20 @@ func NewJSONStore(path string) (*JSONStore, error) {
 }
 
 func (s *JSONStore) CreateProject(input domain.CreateProjectInput) (domain.Project, error) {
-	if strings.TrimSpace(input.Name) == "" {
-		return domain.Project{}, fmt.Errorf("name is required")
-	}
-	if strings.TrimSpace(input.RepoURL) == "" {
-		return domain.Project{}, fmt.Errorf("repoUrl is required")
-	}
-	if input.Branch == "" {
-		input.Branch = "main"
-	}
-	if input.HealthCheckPath == "" {
-		input.HealthCheckPath = "/"
+	input, err := normalizeProjectInput(input)
+	if err != nil {
+		return domain.Project{}, err
 	}
 
 	now := time.Now().UTC()
 	project := domain.Project{
 		ID:              newID("proj"),
-		Name:            strings.TrimSpace(input.Name),
-		RepoURL:         strings.TrimSpace(input.RepoURL),
-		Branch:          strings.TrimSpace(input.Branch),
-		HealthCheckPath: strings.TrimSpace(input.HealthCheckPath),
-		LiveURL:         fmt.Sprintf("https://%s.localhost", slug(input.Name)),
+		Name:            input.Name,
+		RepoURL:         input.RepoURL,
+		Branch:          input.Branch,
+		HealthCheckPath: input.HealthCheckPath,
+		LiveURL:         input.LiveURL,
+		Host:            input.Host,
 		CreatedAt:       now,
 		UpdatedAt:       now,
 	}
@@ -205,18 +198,12 @@ func (s *JSONStore) AddLog(deploymentID string, stream string, message string) (
 	s.mu.Lock()
 	s.state.Logs = append(s.state.Logs, logEntry)
 	err := s.saveLocked()
-	subscribers := append([]chan domain.DeploymentLog(nil), s.logSubscribersLocked(deploymentID)...)
 	s.mu.Unlock()
+
 	if err != nil {
 		return domain.DeploymentLog{}, err
 	}
-
-	for _, subscriber := range subscribers {
-		select {
-		case subscriber <- logEntry:
-		default:
-		}
-	}
+	s.logs.broadcast(deploymentID, logEntry)
 	return logEntry, nil
 }
 
@@ -236,21 +223,66 @@ func (s *JSONStore) ListLogs(deploymentID string) ([]domain.DeploymentLog, error
 }
 
 func (s *JSONStore) SubscribeLogs(deploymentID string) (<-chan domain.DeploymentLog, func()) {
-	channel := make(chan domain.DeploymentLog, 32)
-	s.mu.Lock()
-	if _, ok := s.subscribers[deploymentID]; !ok {
-		s.subscribers[deploymentID] = make(map[chan domain.DeploymentLog]struct{})
-	}
-	s.subscribers[deploymentID][channel] = struct{}{}
-	s.mu.Unlock()
+	return s.logs.subscribe(deploymentID)
+}
 
-	unsubscribe := func() {
-		s.mu.Lock()
-		defer s.mu.Unlock()
-		delete(s.subscribers[deploymentID], channel)
-		close(channel)
+func (s *JSONStore) ListEnvVars(projectID string) ([]domain.EnvVar, error) {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+	var vars []domain.EnvVar
+	for _, item := range s.state.EnvVars {
+		if item.ProjectID == projectID {
+			vars = append(vars, item)
+		}
 	}
-	return channel, unsubscribe
+	sort.Slice(vars, func(i, j int) bool { return vars[i].Key < vars[j].Key })
+	return vars, nil
+}
+
+func (s *JSONStore) UpsertEnvVar(projectID string, key string, value string) (domain.EnvVar, error) {
+	if _, err := s.GetProject(projectID); err != nil {
+		return domain.EnvVar{}, err
+	}
+	key = strings.TrimSpace(key)
+	if key == "" {
+		return domain.EnvVar{}, fmt.Errorf("key is required")
+	}
+	if !isEnvKey(key) {
+		return domain.EnvVar{}, fmt.Errorf("key %q is not a valid environment variable name", key)
+	}
+
+	now := time.Now().UTC()
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	for index := range s.state.EnvVars {
+		if s.state.EnvVars[index].ProjectID == projectID && s.state.EnvVars[index].Key == key {
+			s.state.EnvVars[index].Value = value
+			s.state.EnvVars[index].UpdatedAt = now
+			return s.state.EnvVars[index], s.saveLocked()
+		}
+	}
+	item := domain.EnvVar{
+		ID:        newID("env"),
+		ProjectID: projectID,
+		Key:       key,
+		Value:     value,
+		CreatedAt: now,
+		UpdatedAt: now,
+	}
+	s.state.EnvVars = append(s.state.EnvVars, item)
+	return item, s.saveLocked()
+}
+
+func (s *JSONStore) DeleteEnvVar(projectID string, key string) error {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	for index := range s.state.EnvVars {
+		if s.state.EnvVars[index].ProjectID == projectID && s.state.EnvVars[index].Key == key {
+			s.state.EnvVars = append(s.state.EnvVars[:index], s.state.EnvVars[index+1:]...)
+			return s.saveLocked()
+		}
+	}
+	return ErrNotFound
 }
 
 func (s *JSONStore) load() error {
@@ -296,40 +328,19 @@ func (s *JSONStore) saveLocked() error {
 	return os.Rename(tmpPath, s.path)
 }
 
-func (s *JSONStore) logSubscribersLocked(deploymentID string) []chan domain.DeploymentLog {
-	var subscribers []chan domain.DeploymentLog
-	for subscriber := range s.subscribers[deploymentID] {
-		subscribers = append(subscribers, subscriber)
+func isEnvKey(key string) bool {
+	if key == "" {
+		return false
 	}
-	return subscribers
-}
-
-func slug(value string) string {
-	value = strings.ToLower(strings.TrimSpace(value))
-	var builder strings.Builder
-	lastDash := false
-	for _, r := range value {
-		if (r >= 'a' && r <= 'z') || (r >= '0' && r <= '9') {
-			builder.WriteRune(r)
-			lastDash = false
-			continue
-		}
-		if !lastDash {
-			builder.WriteRune('-')
-			lastDash = true
+	for index, r := range key {
+		switch {
+		case r == '_':
+		case r >= 'A' && r <= 'Z':
+		case r >= 'a' && r <= 'z':
+		case index > 0 && r >= '0' && r <= '9':
+		default:
+			return false
 		}
 	}
-	return strings.Trim(builder.String(), "-")
-}
-
-func newID(prefix string) string {
-	return prefix + "_" + shortID()
-}
-
-func shortID() string {
-	var bytes [6]byte
-	if _, err := rand.Read(bytes[:]); err != nil {
-		return fmt.Sprintf("%d", time.Now().UnixNano())
-	}
-	return hex.EncodeToString(bytes[:])
+	return true
 }
