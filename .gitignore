@@ -3,3 +3,5 @@
 bin/
 *.exe
 *.test
+node_modules/
+internal/app/static/app.dev.js

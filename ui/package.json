@@ -1,0 +1,21 @@
+{
+  "name": "deploy-platform-ui",
+  "private": true,
+  "version": "1.0.0",
+  "description": "Dashboard for the deployment platform. Compiled to a static bundle embedded in the Go binary.",
+  "type": "module",
+  "scripts": {
+    "build": "esbuild src/main.tsx --bundle --minify --format=esm --target=es2020 --outfile=../internal/app/static/app.js",
+    "dev": "esbuild src/main.tsx --bundle --sourcemap --format=esm --target=es2020 --outfile=../internal/app/static/app.js --watch",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "preact": "^10.27.2"
+  },
+  "devDependencies": {
+    "@preact/preset-vite": "^2.10.2",
+    "esbuild": "^0.27.2",
+    "jsdom": "^29.1.1",
+    "typescript": "^5.9.3"
+  }
+}
